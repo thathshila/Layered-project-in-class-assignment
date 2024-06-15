@@ -11,6 +11,7 @@ import java.util.List;
 
 public class OrderDAOImpl implements OrderDAO {
     OrderDetailDAOImpl orderDetailDAO = new OrderDetailDAOImpl();
+    ItemDAOImpl itemDAO = new ItemDAOImpl();
     @Override
     public String generateNewOrderId() throws SQLException, ClassNotFoundException {
         Connection connection = DBConnection.getDbConnection().getConnection();
@@ -65,16 +66,13 @@ public class OrderDAOImpl implements OrderDAO {
                 }
 
 //                //Search & Update Item
-                ItemDTO item = findItem(detail.getItemCode());
+
+                ItemDTO item = itemDAO.findItem(detail.getItemCode());
                 item.setQtyOnHand(item.getQtyOnHand() - detail.getQty());
 
-                PreparedStatement pstm = connection.prepareStatement("UPDATE Item SET description=?, unitPrice=?, qtyOnHand=? WHERE code=?");
-                pstm.setString(1, item.getDescription());
-                pstm.setBigDecimal(2, item.getUnitPrice());
-                pstm.setInt(3, item.getQtyOnHand());
-                pstm.setString(4, item.getCode());
+                boolean isUpdated = itemDAO.updateItemQty(item);
 
-                if (!(pstm.executeUpdate() > 0)) {
+                if (isUpdated) {
                     connection.rollback();
                     connection.setAutoCommit(true);
                     return false;

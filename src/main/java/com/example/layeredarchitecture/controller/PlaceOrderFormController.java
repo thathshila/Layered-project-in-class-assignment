@@ -116,7 +116,7 @@ public class PlaceOrderFormController {
                         rst.next();
                         CustomerDTO customerDTO = new CustomerDTO(newValue + "", rst.getString("name"), rst.getString("address"));*/
                         CustomerDTO customerDTO = customerDAO.searchCustomer("C00-001");
-                        if (customerDTO != null){
+                        if (customerDTO != null) {
                             txtCustomerName.setText(customerDTO.getName());
                         }
 
@@ -219,7 +219,7 @@ public class PlaceOrderFormController {
             ResultSet rst = stm.executeQuery("SELECT oid FROM `Orders` ORDER BY oid DESC LIMIT 1;");*/
             // OrderDAOImpl orderDAO = new OrderDAOImpl();
             String id = orderDAO.generateNewOrderId();
-            if(id != null){
+            if (id != null) {
                 String oid = id;
                 int newOrderId = Integer.parseInt(oid.replace("OID-", "")) + 1;
                 return String.format("OID-%03d", newOrderId);
@@ -227,7 +227,7 @@ public class PlaceOrderFormController {
                 return "OID-001";
             }
             //   return rst.next() ? String.format("OID-%03d", (Integer.parseInt(rst.getString("oid").replace("OID-", "")) + 1)) : "OID-001";
-          //  return generateNewOrderId() != null ? String.format("OID-%03d", (Integer.parseInt(id.replace("OID-", "")) + 1)) : "OID-001";
+            //  return generateNewOrderId() != null ? String.format("OID-%03d", (Integer.parseInt(id.replace("OID-", "")) + 1)) : "OID-001";
         } catch (SQLException e) {
             new Alert(Alert.AlertType.ERROR, "Failed to generate a new order id").show();
         } catch (ClassNotFoundException e) {
@@ -363,29 +363,29 @@ public class PlaceOrderFormController {
         txtQty.clear();
         calculateTotal();
     }
-
-
-    public ItemDTO findItem(String code) {
-        try {
-           /* Connection connection = DBConnection.getDbConnection().getConnection();
-            PreparedStatement pstm = connection.prepareStatement("SELECT * FROM Item WHERE code=?");
-            pstm.setString(1, code);
-            ResultSet rst = pstm.executeQuery();*/
-
-            ItemDTO itemDTO = itemDAO.findItem(code);
-            if(itemDTO != null){
-                txtDescription.setText(itemDTO.getDescription());
-                txtQtyOnHand.setText(String.valueOf(itemDTO.getQtyOnHand()));
-                txtUnitPrice.setText(itemDTO.getUnitPrice().toString());
-            }
-         /*   rst.next();
-            return new ItemDTO(code, rst.getString("description"), rst.getBigDecimal("unitPrice"), rst.getInt("qtyOnHand"));*/
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to find the Item " + code, e);
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
 }
+
+//    public ItemDTO findItem(String code) {
+//        try {
+//           /* Connection connection = DBConnection.getDbConnection().getConnection();
+//            PreparedStatement pstm = connection.prepareStatement("SELECT * FROM Item WHERE code=?");
+//            pstm.setString(1, code);
+//            ResultSet rst = pstm.executeQuery();*/
+//
+//            ItemDTO itemDTO = itemDAO.findItem(code);
+//            if(itemDTO != null){
+//                txtDescription.setText(itemDTO.getDescription());
+//                txtQtyOnHand.setText(String.valueOf(itemDTO.getQtyOnHand()));
+//                txtUnitPrice.setText(itemDTO.getUnitPrice().toString());
+//            }
+//            rst.next();
+//            return new ItemDTO(code, rst.getString("description"), rst.getBigDecimal("unitPrice"), rst.getInt("qtyOnHand"));
+//        } catch (SQLException e) {
+//            throw new RuntimeException("Failed to find the Item " + code, e);
+//        } catch (ClassNotFoundException e) {
+//            e.printStackTrace();
+//        }
+//        return null;
+//    }
+
 
