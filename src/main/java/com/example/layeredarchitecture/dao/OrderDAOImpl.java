@@ -25,19 +25,11 @@ public class OrderDAOImpl implements OrderDAO {
     }
 
     @Override
-    public boolean saveOrder(String orderId, LocalDate orderDate, String customerId, List<OrderDetailDTO> orderDetails) {
-        Connection connection = null;
+    public boolean saveOrder(String orderId, LocalDate orderDate, String customerId, List<OrderDetailDTO> orderDetails) throws SQLException, ClassNotFoundException {
+        Connection connection = DBConnection.getDbConnection().getConnection();
         try {
-            connection = DBConnection.getDbConnection().getConnection();
-            PreparedStatement stm = connection.prepareStatement("SELECT oid FROM `Orders` WHERE oid=?");
-            stm.setString(1, orderId);
-            /*if order id already exist*/
-            if (stm.executeQuery().next()) {
-
-            }
-
             connection.setAutoCommit(false);
-            stm = connection.prepareStatement("INSERT INTO `Orders` (oid, date, customerID) VALUES (?,?,?)");
+            PreparedStatement stm = connection.prepareStatement("INSERT INTO `Orders` (oid, date, customerID) VALUES (?,?,?)");
             stm.setString(1, orderId);
             stm.setDate(2, Date.valueOf(orderDate));
             stm.setString(3, customerId);
@@ -48,31 +40,17 @@ public class OrderDAOImpl implements OrderDAO {
                 return false;
             }
 
-            //stm = connection.prepareStatement("INSERT INTO OrderDetails (oid, itemCode, unitPrice, qty) VALUES (?,?,?,?)");
-
             for (OrderDetailDTO detail : orderDetails) {
-//                stm.setString(1, orderId);
-//                stm.setString(2, detail.getItemCode());
-//                stm.setBigDecimal(3, detail.getUnitPrice());
-//                stm.setInt(4, detail.getQty());
-
-
-                orderDetailDAO.saveOrderDetail(orderId,detail);
-
-                if (stm.executeUpdate() != 1) {
+                if (!orderDetailDAO.saveOrderDetail(orderId, detail)) {
                     connection.rollback();
                     connection.setAutoCommit(true);
                     return false;
                 }
 
-//                //Search & Update Item
-
                 ItemDTO item = itemDAO.findItem(detail.getItemCode());
                 item.setQtyOnHand(item.getQtyOnHand() - detail.getQty());
 
-                boolean isUpdated = itemDAO.updateItemQty(item);
-
-                if (isUpdated) {
+                if (!itemDAO.updateItemQty(item)) {
                     connection.rollback();
                     connection.setAutoCommit(true);
                     return false;
@@ -82,13 +60,11 @@ public class OrderDAOImpl implements OrderDAO {
             connection.commit();
             connection.setAutoCommit(true);
             return true;
-
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        } catch (ClassNotFoundException e) {
+        } catch (SQLException | ClassNotFoundException e) {
+            connection.rollback();
+            connection.setAutoCommit(true);
             e.printStackTrace();
+            return false;
         }
-        return false;
     }
-
 }

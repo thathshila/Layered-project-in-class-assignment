@@ -81,8 +81,7 @@ public class PlaceOrderFormController {
             return new ReadOnlyObjectWrapper<>(btnDelete);
         });
 
-        orderId = generateNewOrderId();
-        lblId.setText("Order ID: " + orderId);
+        //lblId.setText("Order ID: " + generateNewOrderId());
         lblDate.setText(LocalDate.now().toString());
         btnPlaceOrder.setDisable(true);
         txtCustomerName.setFocusTraversable(false);
@@ -115,7 +114,7 @@ public class PlaceOrderFormController {
                         ResultSet rst = pstm.executeQuery();
                         rst.next();
                         CustomerDTO customerDTO = new CustomerDTO(newValue + "", rst.getString("name"), rst.getString("address"));*/
-                        CustomerDTO customerDTO = customerDAO.searchCustomer("C00-001");
+                        CustomerDTO customerDTO = customerDAO.searchCustomer(cmbCustomerId.getValue());
                         if (customerDTO != null) {
                             txtCustomerName.setText(customerDTO.getName());
                         }
@@ -123,7 +122,6 @@ public class PlaceOrderFormController {
                     } catch (SQLException e) {
                         new Alert(Alert.AlertType.ERROR, "Failed to find the customer " + newValue + "" + e).show();
                     }
-
                 } catch (ClassNotFoundException e) {
                     e.printStackTrace();
                 }
@@ -212,29 +210,23 @@ public class PlaceOrderFormController {
         return exist;
     }
 
-    public String generateNewOrderId() {
+    public synchronized String generateNewOrderId() {
         try {
-           /* Connection connection = DBConnection.getDbConnection().getConnection();
-            Statement stm = connection.createStatement();
-            ResultSet rst = stm.executeQuery("SELECT oid FROM `Orders` ORDER BY oid DESC LIMIT 1;");*/
-            // OrderDAOImpl orderDAO = new OrderDAOImpl();
             String id = orderDAO.generateNewOrderId();
             if (id != null) {
-                String oid = id;
-                int newOrderId = Integer.parseInt(oid.replace("OID-", "")) + 1;
+                int newOrderId = Integer.parseInt(id.replace("OID-", "")) + 1;
                 return String.format("OID-%03d", newOrderId);
             } else {
                 return "OID-001";
             }
-            //   return rst.next() ? String.format("OID-%03d", (Integer.parseInt(rst.getString("oid").replace("OID-", "")) + 1)) : "OID-001";
-            //  return generateNewOrderId() != null ? String.format("OID-%03d", (Integer.parseInt(id.replace("OID-", "")) + 1)) : "OID-001";
         } catch (SQLException e) {
-            new Alert(Alert.AlertType.ERROR, "Failed to generate a new order id").show();
+            new Alert(Alert.AlertType.ERROR, "Failed to generate a new order ID").show();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
         return "OID-001";
     }
+
 
     private void loadAllCustomerIds() {
         try {
@@ -343,11 +335,15 @@ public class PlaceOrderFormController {
     }
 
     public void txtQty_OnAction(ActionEvent actionEvent) {
+
     }
 
-    public void btnPlaceOrder_OnAction(ActionEvent actionEvent) {
-        boolean b = orderDAO.saveOrder(orderId, LocalDate.now(), cmbCustomerId.getValue(),
-                tblOrderDetails.getItems().stream().map(tm -> new OrderDetailDTO(tm.getCode(), tm.getQty(), tm.getUnitPrice())).collect(Collectors.toList()));
+    public void btnPlaceOrder_OnAction(ActionEvent actionEvent) throws SQLException, ClassNotFoundException {
+        String id = generateNewOrderId();
+        boolean b = orderDAO.saveOrder(id, LocalDate.now(), cmbCustomerId.getValue(),
+                tblOrderDetails.getItems().stream()
+                        .map(tm -> new OrderDetailDTO(tm.getCode(), tm.getQty(), tm.getUnitPrice()))
+                        .collect(Collectors.toList()));
 
         if (b) {
             new Alert(Alert.AlertType.INFORMATION, "Order has been placed successfully").show();
@@ -355,8 +351,6 @@ public class PlaceOrderFormController {
             new Alert(Alert.AlertType.ERROR, "Order has not been placed successfully").show();
         }
 
-        orderId = generateNewOrderId();
-        lblId.setText("Order Id: " + orderId);
         cmbCustomerId.getSelectionModel().clearSelection();
         cmbItemCode.getSelectionModel().clearSelection();
         tblOrderDetails.getItems().clear();

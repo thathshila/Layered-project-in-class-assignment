@@ -9,5 +9,5 @@ import java.util.List;
 
 public interface OrderDAO {
     public String generateNewOrderId() throws SQLException, ClassNotFoundException;
-    public boolean saveOrder(String orderId, LocalDate orderDate, String customerId, List<OrderDetailDTO> orderDetails);
+    public boolean saveOrder(String orderId, LocalDate orderDate, String customerId, List<OrderDetailDTO> orderDetails) throws SQLException, ClassNotFoundException;
 }
